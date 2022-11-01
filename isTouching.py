@@ -16,5 +16,5 @@ class Shape:
                 linesforshape.append("[" + self.coordsforshape[i] + "," + self.coordsforshape[0] + "]")
         return linesforshape
 
-frog = Shape
+
 
