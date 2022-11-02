@@ -4,6 +4,7 @@ def checktouching(shape_1, shape_2):
     linesshape_2 = shape_2.getlines()
     touching = False
     intersecting = False
+    outerloopbreak = False
     for i in linesshape_1:
         for j in linesshape_2:
             if i[1][0] == 0 and j[1][0] == 0: # both lines horizontal

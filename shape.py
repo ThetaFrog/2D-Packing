@@ -5,16 +5,34 @@ class Shape:
         self.y = y
         self.coordsforshape = coordsforshape
 
-    def shiftcoords(self):
+    def shiftshape(self, shift_x, shift_y):
         shiftedcoords = []
         for i in range(0, len(self.coordsforshape)):
-
-            shiftedcoords.append([self.coordsforshape[i][0] + self.x, self.coordsforshape[i][1] + self.y])
+            shiftedcoords.append([self.coordsforshape[i][0] + shift_x, self.coordsforshape[i][1] + shift_y])
         return shiftedcoords
+
+    def rotateshape(self, degreesclockwise):
+        shape_w, shape_h = finddimensions(self.coordsforshape)
+        rotatedcoords = []
+        if degreesclockwise == 90:
+            for i in range(0, len(self.coordsforshape)):
+                rotatedcoords.append(
+                    [self.coordsforshape[i][1] + self.y, (self.coordsforshape[i][0] * -1) + self.x + shape_w])
+
+        elif degreesclockwise == 180:
+            for i in range(0, len(self.coordsforshape)):
+                rotatedcoords.append([(self.coordsforshape[i][0] * -1) + self.x + shape_w,
+                                      (self.coordsforshape[i][1] * -1) + self.y + shape_h])
+
+        elif degreesclockwise == 270:
+            for i in range(0, len(self.coordsforshape)):
+                rotatedcoords.append(
+                    [(self.coordsforshape[i][1] * -1) + self.y + shape_h, self.coordsforshape[i][0] + self.x])
+        return rotatedcoords
 
     def getlines(self):
         linesforshape = []
-        shiftedcoords = self.shiftcoords()
+        shiftedcoords = self.shiftshape(self.x, self.y)
         for i in range(0, len(shiftedcoords)):
             if i < len(self.coordsforshape) - 1:
                 vector = [shiftedcoords[i + 1][0] - shiftedcoords[i][0], shiftedcoords[i + 1][1] - shiftedcoords[i][1]]
@@ -33,4 +51,3 @@ def finddimensions(shape_coords):
         x_all.append(j[0])
         y_all.append(j[1])
     return max(x_all), max(y_all)
-
