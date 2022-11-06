@@ -1,8 +1,8 @@
 # import statements
 import isTouching
 import shape
+import svgcommands
 import random
-
 
 # code
 # values hardcoded as placeholder
@@ -15,4 +15,7 @@ shapedict = {}
 for i in range(1, noofshapes + 1):
     variablename = "s" + str(i)
     shapedict.update({variablename: shape.Shape(random.randint(0, rect_w - shape_w), random.randint(0, rect_h - shape_h), coords)})
-    print(shapedict[variablename].getlines())
+
+    # for j in range(1, noofshapes + 1):
+        # if isTouching.checktouching(shapedict[variablename], shapedict["s" + str(j)]) == "intersecting":
+
