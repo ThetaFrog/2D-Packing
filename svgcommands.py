@@ -11,14 +11,13 @@ def formatlines(lines, frame_w, frame_h):
         finalstring = "M"
         for j in i:
             finalstring = finalstring + " " + str(j[0][0] * 35.43307) + "," + str((frame_h - j[0][1]) * 35.43307)
-        finalstring = finalstring + " Z"
+        finalstring += " Z"
         finallinelist.append(finalstring)
-    print(finallinelist)
     return finallinelist
 
 
-def svgout(frame_w, frame_h, lines):
-    dwg = sw.Drawing("output.svg")
+def svgout(frame_w, frame_h, lines, svg="output.svg"):
+    dwg = sw.Drawing(svg)
     dwg.add(dwg.rect((0, 0), (frame_w * 35.43307, frame_h * 35.43307), style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"))
     dwg.save()
     for i in formatlines(lines, frame_w, frame_h):

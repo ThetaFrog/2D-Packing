@@ -1,15 +1,16 @@
 # classes
 class Shape:
-    def __init__(self, x, y, coordsforshape):  # coords forshape formatted as [[x,y],[x,y]]
+    def __init__(self, x, y, coordsforshape):  # coords for shape formatted as [[x,y],[x,y]]
         self.x = x
         self.y = y
         self.coordsforshape = coordsforshape
+        self.shiftshape(self.x, self.y)
 
     def shiftshape(self, shift_x, shift_y):
         shiftedcoords = []
         for i in range(0, len(self.coordsforshape)):
             shiftedcoords.append([self.coordsforshape[i][0] + shift_x, self.coordsforshape[i][1] + shift_y])
-        return shiftedcoords
+        self.coordsforshape = shiftedcoords
 
     def rotateshape(self, degreesclockwise):
         shape_w, shape_h = finddimensions(self.coordsforshape)
@@ -28,18 +29,17 @@ class Shape:
             for i in range(0, len(self.coordsforshape)):
                 rotatedcoords.append(
                     [(self.coordsforshape[i][1] * -1) + self.y + shape_h, self.coordsforshape[i][0] + self.x])
-        return rotatedcoords
+        self.coordsforshape = rotatedcoords
 
     def getlines(self):
         linesforshape = []
-        shiftedcoords = self.shiftshape(self.x, self.y)
-        for i in range(0, len(shiftedcoords)):
+        for i in range(0, len(self.coordsforshape)):
             if i < len(self.coordsforshape) - 1:
-                vector = [shiftedcoords[i + 1][0] - shiftedcoords[i][0], shiftedcoords[i + 1][1] - shiftedcoords[i][1]]
+                vector = [self.coordsforshape[i + 1][0] - self.coordsforshape[i][0], self.coordsforshape[i + 1][1] - self.coordsforshape[i][1]]
             else:
-                vector = [shiftedcoords[0][0] - shiftedcoords[i][0], shiftedcoords[0][1] - shiftedcoords[i][1]]
+                vector = [self.coordsforshape[0][0] - self.coordsforshape[i][0], self.coordsforshape[0][1] - self.coordsforshape[i][1]]
 
-            linesforshape.append([shiftedcoords[i], vector])
+            linesforshape.append([self.coordsforshape[i], vector])
         return linesforshape
 
 
