@@ -60,4 +60,4 @@ def checktouching(shape_1, shape_2):
     elif touching:
         return "touching"
     else:
-        return "free"
+        return "not touching"
