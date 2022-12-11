@@ -241,6 +241,6 @@ def svgarrangement(areawidth, areaheight, rows):
 
 def efficiency(timetaken, noofshapes, rectarea, shapearea):
     spaceutil = shapearea * noofshapes / rectarea
-    efficientmetric = spaceutil * (1/timetaken)
+    efficientmetric = spaceutil * (1/(timetaken ** 0.5))
     return spaceutil, efficientmetric
 
