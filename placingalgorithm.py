@@ -51,7 +51,6 @@ def groupshapes(maxareawidth, maxareaheight, coords, area):
         break
     finalcoords = [*allcoords, *mostefficient.coordsforshape]
     xlist, ylist = shape.coordsinfo(finalcoords, True, True)
-    print(min(xlist), min(ylist))
     for key in shapedict:
         pass
         shapedict[key].shiftshape(-min(xlist), -min(ylist))
@@ -193,7 +192,7 @@ def arrangemaxshapes(areawidth, areaheight, shapecoords, shapearea):        # re
             left = True
         else:
             left = False
-        newrow = tilerow(areawidth, rownumber, shapes, height + 1, left=left)
+        newrow = tilerow(areawidth, rownumber, shapes, height, left=left)
         rows.update(newrow)
         downtouch(newrow, rows, rowleft=left)
         # lefttouch(newrow, rows, rowleft=left)
@@ -246,6 +245,6 @@ def svgarrangement(areawidth, areaheight, rows):
 
 def efficiency(timetaken, noofshapes, rectarea, shapearea):
     spaceutil = shapearea * noofshapes / rectarea
-    efficientmetric = spaceutil * (1/(timetaken ** 0.5))
+    efficientmetric = spaceutil * (1/(1 + timetaken))
     return spaceutil, efficientmetric
 
