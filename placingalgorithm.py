@@ -214,6 +214,7 @@ def findminarea(areawidth, noofshapes, shapecoords, shapearea):             # re
     packed = False
     rownumber = 0
     rows = {}
+    heightcoords = []
     while not packed:
         if rownumber % 2 == 0:
             left = True
@@ -223,13 +224,16 @@ def findminarea(areawidth, noofshapes, shapecoords, shapearea):             # re
         rows.update(newrow)
         downtouch(newrow, rows, rowleft=left)
         # lefttouch(newrow, rows, rowleft=left)
-        items = [item for item in rows]
-        if len(items) >= noofshapes:
+        heightcoords = []
+        lines = [item for item in rows]
+        for line in lines:
+            heightcoords.extend(rows[line].coordsforshape)
+        if len(lines) >= noofshapes:
             packed = True
+        rownumber += 1
         # add code to remove excess shapes
-        heightcoords = [item.coordsforshape for item in items]
-        height = shape.finddimensions(heightcoords)[1]
-        return height, rows
+    height = shape.finddimensions(heightcoords)[1]
+    return height, rows
 
 
 def svgarrangement(areawidth, areaheight, rows):
