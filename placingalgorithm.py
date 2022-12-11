@@ -59,9 +59,8 @@ def groupshapes(maxareawidth, maxareaheight, coords, area):
     return shapedict
 
 
-def tilerow(areawidth, rownum, groupofshapes, left=True):
+def tilerow(areawidth, rownum, groupofshapes, startheight, left=True):
     shape_w, shape_h = shape.finddimensions([*groupofshapes["s0,1"].coordsforshape, *groupofshapes["s0,2"].coordsforshape])
-    startheight = rownum * shape_h
     possiblegroups = int(areawidth/shape_w)
     row = {}
     if left:
@@ -188,12 +187,13 @@ def arrangemaxshapes(areawidth, areaheight, shapecoords, shapearea):        # re
     rownumber = 0
     rows = {}
     lines = 0
+    height = 0
     while not packed:
         if rownumber % 2 == 0:
             left = True
         else:
             left = False
-        newrow = tilerow(areawidth, rownumber, shapes, left=left)
+        newrow = tilerow(areawidth, rownumber, shapes, height + 1, left=left)
         rows.update(newrow)
         downtouch(newrow, rows, rowleft=left)
         # lefttouch(newrow, rows, rowleft=left)
@@ -215,12 +215,13 @@ def findminarea(areawidth, noofshapes, shapecoords, shapearea):             # re
     rownumber = 0
     rows = {}
     heightcoords = []
+    height = 0
     while not packed:
         if rownumber % 2 == 0:
             left = True
         else:
             left = False
-        newrow = tilerow(areawidth, rownumber, shapes, left=left)
+        newrow = tilerow(areawidth, rownumber, shapes, height + 1, left=left)
         rows.update(newrow)
         downtouch(newrow, rows, rowleft=left)
         # lefttouch(newrow, rows, rowleft=left)
@@ -228,11 +229,11 @@ def findminarea(areawidth, noofshapes, shapecoords, shapearea):             # re
         lines = [item for item in rows]
         for line in lines:
             heightcoords.extend(rows[line].coordsforshape)
+        height = shape.finddimensions(heightcoords)[1]
         if len(lines) >= noofshapes:
             packed = True
         rownumber += 1
         # add code to remove excess shapes
-    height = shape.finddimensions(heightcoords)[1]
     return height, rows
 
 
