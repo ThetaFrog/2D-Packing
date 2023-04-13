@@ -1,153 +1,148 @@
+# imports
+import numpy as np
+from plane import Plane
+from shapely.geometry import Polygon
+
+
 # classes
 class Shape:
-    def __init__(self, x, y, coordsforshape):  # coords for shape formatted as [[x,y],[x,y]]
-        self.x = x
-        self.y = y
-        self.coordsforshape = coordsforshape
-        self.shiftshape(self.x, self.y)
+    def __init__(self, trianglesforshape: np.array([], dtype=float)):
+        """
+        initialises shape class
+        :param trianglesforshape: 3D array containing the shapes constituent triangles,
+        their constituent points (as pairs of coordinates)
+        :return: Nothing
+        """
+        self.trianglesforshape: np.array([]) = np.copy(trianglesforshape)
+        self.x, self.y = self.get_bounds()[0]
 
-    def shiftshape(self, shift_x, shift_y):
-        shiftedcoords = []
-        for i in range(0, len(self.coordsforshape)):
-            shiftedcoords.append([self.coordsforshape[i][0] + shift_x, self.coordsforshape[i][1] + shift_y])
-        self.coordsforshape = shiftedcoords
+    def __str__(self) -> str:
+        """
+        returns coordinates when Shape object is printed
 
-    def rotateshape(self, degreesclockwise):
-        self.shiftshape(-self.x, -self.y)
-        shape_w, shape_h = finddimensions(self.coordsforshape)
-        rotatedcoords = []
-        if degreesclockwise == 90:
-            for i in range(0, len(self.coordsforshape)):
-                rotatedcoords.append(
-                    [self.coordsforshape[i][1], (self.coordsforshape[i][0] * -1) + shape_w])
+        :return: triangles that make up the shape
+        """
+        return str(self.trianglesforshape)
 
-        elif degreesclockwise == 180:
-            for i in range(0, len(self.coordsforshape)):
-                rotatedcoords.append([(self.coordsforshape[i][0] * -1) + shape_w,
-                                      (self.coordsforshape[i][1] * -1) + shape_h])
+    def get_bounds(self) -> tuple[tuple[float, float], tuple[float, float]]:
+        """
+        Gets the bottom-left and top-right points of the shape's bounding rectangle
 
-        elif degreesclockwise == 270:
-            for i in range(0, len(self.coordsforshape)):
-                rotatedcoords.append(
-                    [(self.coordsforshape[i][1] * -1) + shape_h, self.coordsforshape[i][0]])
-        self.coordsforshape = rotatedcoords
-        self.shiftshape(self.x, self.y)
+        :return: ((bottom_x, bottom_y), (top_x, top_y))
+        """
+        b_x: float = 0
+        b_y: float = 0
+        h_x: float = 0
+        h_y: float = 0
+        for triangle in self.trianglesforshape:
+            for point in triangle:
+                if point[0] < b_x:
+                    b_x = point[0]
+                elif point[0] > h_x:
+                    h_x = point[0]
+                if point[1] < b_y:
+                    b_y = point[1]
+                elif point[1] > h_y:
+                    h_y = point[1]
+        return (b_x, b_y), (h_x, h_y)
 
-    def getlines(self):
-        linesforshape = []
-        for i in range(0, len(self.coordsforshape)):
-            if i < len(self.coordsforshape) - 1:
-                vector = [self.coordsforshape[i + 1][0] - self.coordsforshape[i][0], self.coordsforshape[i + 1][1] - self.coordsforshape[i][1]]
-            else:
-                vector = [self.coordsforshape[0][0] - self.coordsforshape[i][0], self.coordsforshape[0][1] - self.coordsforshape[i][1]]
+    def get_size(self) -> tuple[float, float]:
+        """
+        Gets size of the shape
 
-            linesforshape.append([self.coordsforshape[i], vector])
-        return linesforshape
+        :return: Tuple of x size and y size
+        """
+        (b_x, b_y), (h_x, h_y) = self.get_bounds()
+        return h_x - b_x, h_y - b_y
+
+    def _get_area(self) -> float:
+        """
+        Finds the area of the shape based on the area of individual triangles
+        :return: area
+        """
+        area = 0.0
+        for triangle in self.trianglesforshape:
+            xs = np.array([coord[0] for coord in triangle])
+            ys = np.array([coord[1] for coord in triangle])
+            area += 0.5 * (max(xs) - min(xs)) * (max(ys) - min(ys))
+        return area
+
+    def shift(self, dx, dy):
+        """
+        translates the shape
+        :param dx: shift for x
+        :param dy: shift for y
+        :return: Nothing
+        """
+        self.x += dx
+        self.y += dy
+        for triangle in range(0, len(self.trianglesforshape)):
+            for point in range(0, len(self.trianglesforshape[triangle])):
+                self.trianglesforshape[triangle, point, 0] += dx
+                self.trianglesforshape[triangle, point, 1] += dy
+
+    def rotate(self, angle):
+        """
+        rotates the Shape by a given angle
+        :param angle: angle to rotate anticlockwise by
+        :return: Nothing
+        """
+        rad = angle * np.pi / 180
+        old_x, old_y = self.x, self.y
+        self.shift(-old_x, -old_y)
+        for triangle in range(0, len(self.trianglesforshape)):
+            for point in range(0, 3):
+                x = self.trianglesforshape[triangle, point, 0]
+                y = self.trianglesforshape[triangle, point, 1]
+                x_prime = x * np.cos(rad) - y * np.sin(rad)
+                y_prime = y * np.cos(rad) + x * np.sin(rad)
+                self.trianglesforshape[triangle, point, 0] = np.round(x_prime, 4)
+                self.trianglesforshape[triangle, point, 1] = np.round(y_prime, 4)
+        b_x, b_y = self.get_bounds()[0]
+        self.shift(old_x - b_x, old_y - b_y)
+
+    def is_touching(self, anothershape) -> str:
+        """
+        Determine whether two shape objects are touching based on intersections between lines
+        :param anothershape: the shape that may be intersecting with self
+        :return: "touching," "overlapping" or "not touching"
+        """
+        touching = False
+        for triangle in self.trianglesforshape:
+            for triangle2 in anothershape.trianglesforshape:
+                poly1s = Polygon(triangle)
+                poly2s = Polygon(triangle2)
+                if poly1s.touches(poly2s):
+                    touching = True
+                    continue
+                if poly1s.intersects(poly2s):
+                    return "overlapping"
+        if touching:
+            return "touching"
+        else:
+            return "not touching"
 
 
-# functions
-def coordsinfo(shape_coords, x_list=False, y_list=False):
-    x_all = []
-    y_all = []
-    for j in shape_coords:
-        x_all.append(j[0])
-        y_all.append(j[1])
-    if x_list and y_list:
-        return x_all, y_all
-    elif x_list:
-        return x_all
-    elif y_list:
-        return y_all
-    else:
-        return []
-
-
-def finddimensions(shape_coords):
-    x_all, y_all = coordsinfo(shape_coords, x_list=True, y_list=True)
-    return max(x_all) - min(x_all), max(y_all) - min(y_all)
-
-"""
-def findarea(listofshapes):
-    totalarea = 0
-    i = listofshapes[0]
-    coords = i.coordsforshape
-    x_all, y_all = coordsinfo(coords, x_list=True, y_list=True)
-    xprev = min(x_all)
-    areamap = []
-    area = 0
-    while len(x_all) != 0:      # For each distinct x value
-        x = min(x_all)
-        ycoords = []
-        for j in i.coordsforshape:
-            if j[0] == x:
-                ycoords.append(j[1])
-        ycoords.sort()
-        ylines = []
-        for c in range(0, len(ycoords), 2):             # Formatting ylines so that it can be put in areamap
-            ylines.append([ycoords[c], ycoords[c + 1]])
-        ylines.append(x - xprev)
-        areamap.append(ylines)
-        xprev = x
-        while x in x_all:               # Deleting x vals equal to the one already considered
-            x_all.remove(x)
-    # With parsed coordinates, find area
-    for xval in range(1, len(areamap)):
-        for yval in range(0, len(areamap[xval]) - 1):
-            multiplier = areamap[xval][-1]
-            closeb, closeh = areamap[xval][yval][0], areamap[xval][yval][1]
-
-            for vx in range(xval - 1, -1, -1):
-                for vy in range(0, len(areamap[vx]) - 1):
-                    if areamap[vx][vy]:
-                        openb, openh = areamap[vx][vy][0], areamap[vx][vy][1]
-                    else:
-                        continue
-                    if openb == closeb and closeh == openh:
-                        area += multiplier * (closeh - closeb)
-                        areamap[vx][vy] = []
-                        areamap[xval][yval] = []
-                    elif openb < closeb < closeh < openh:
-                        area += multiplier * (closeh - closeb)
-                        areamap[vx][vy] = [openb, closeb]
-                        areamap[vx].insert(vy + 1, [closeh, openh])
-                        areamap[xval][yval] = []
-                    elif closeb < openb < openh < closeh:
-                        area += multiplier * (openh - openb)
-                        areamap[xval][yval] = [openh, closeh]
-                        areamap[xval].insert(yval + 1, [openb, closeb])
-                        areamap[vx][vy] = []
-                    elif openb < closeb < openh:
-                        area += multiplier * (openh - closeb)
-                        oldopenh = openh
-                        openh = closeb
-                        closeb = oldopenh
-                    elif openb < closeh < openh:
-                        area += multiplier * (closeh - openb)
-                        oldopenb = openb
-                        openb = closeh
-                        closeh = oldopenb
-                    elif closeb < openh < closeh:
-                        area += multiplier * (openh - closeb)
-                        oldopenh = openh
-                        openh = closeb
-                        closeb = oldopenh
-                    elif closeb < openb < closeh:
-                        area += multiplier * (closeh - openb)
-                        oldopenb = openb
-                        openb = closeh
-                        closeh = oldopenb
-                    if openb == openh:
-                        areamap[vx][vy] = []
-                    # else:
-                        # areamap[vx][vy][0] = openb
-                        # areamap[vx][vy][1] = openh
-                    if closeh == closeb:
-                        areamap[xval][yval] = []
-                    else:
-                        areamap[xval][yval][0] = closeb
-                        areamap[xval][yval][1] = closeh
-                multiplier += areamap[vx][-1]
-
-    totalarea += area * len(listofshapes)
-    return totalarea
-"""
+if __name__ == "__main__":
+    shape1: Shape = Shape(np.array([[[0, 0],
+                                     [1, 1],
+                                     [1, 0]],
+                                    [[1, 1],
+                                     [2, 2],
+                                     [1, 0]]], dtype=float))
+    shape2: Shape = Shape(np.array([[[1, 0],
+                                     [2, 1],
+                                     [2, 0]],
+                                    [[2, 1],
+                                     [3, 2],
+                                     [2, 0]]], dtype=float))
+    shape1.shift(5,5)
+    shape2.shift(4,5)
+    shape1.rotate(0)
+    shapedict: dict = {"shape1": shape1, "shape2": shape2}
+    plane: Plane = Plane(10, 10)
+    plane.draw(shapedict)
+    # print(shapedict["shape1"].is_touching(shapedict["shape2"]))
+    print(shape1)
+    print("----------------")
+    print(shape2)
