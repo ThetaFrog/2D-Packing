@@ -1,5 +1,7 @@
 # imports
 import numpy as np
+from shapely import shortest_line, LineString
+
 from plane import Plane
 from shapely.geometry import Polygon
 
@@ -101,26 +103,30 @@ class Shape:
         b_x, b_y = self.get_bounds()[0]
         self.shift(old_x - b_x, old_y - b_y)
 
-    def is_touching(self, anothershape) -> str:
+    def is_touching(self, anothershape) -> int:
         """
         Determine whether two shape objects are touching based on intersections between lines
         :param anothershape: the shape that may be intersecting with self
-        :return: "touching," "overlapping" or "not touching"
+        :return: number of interactions if touching, 0 if not touching, -1 if overlapping
         """
-        touching = False
+        touching = 0
         for triangle in self.trianglesforshape:
             for triangle2 in anothershape.trianglesforshape:
                 poly1s = Polygon(triangle)
                 poly2s = Polygon(triangle2)
-                if poly1s.touches(poly2s):
-                    touching = True
+                t1 = np.array([LineString([triangle[0], triangle[1]]), LineString([triangle[1], triangle[2]]),
+                               LineString([triangle[2], triangle[0]])])
+                t2 = np.array([LineString([triangle2[0], triangle2[1]]), LineString([triangle2[1], triangle2[2]]),
+                               LineString([triangle2[2], triangle2[0]])])
+                for line in t1:
+                    for line2 in t2:
+                        if -0.0001 <= shortest_line(line, line2).length <= 0.0001:
+                            touching += 1
+                if touching != 0:
                     continue
                 if poly1s.intersects(poly2s):
-                    return "overlapping"
-        if touching:
-            return "touching"
-        else:
-            return "not touching"
+                    return -1
+        return touching
 
 
 if __name__ == "__main__":
@@ -136,13 +142,13 @@ if __name__ == "__main__":
                                     [[2, 1],
                                      [3, 2],
                                      [2, 0]]], dtype=float))
-    shape1.shift(5,5)
-    shape2.shift(4,5)
-    shape1.rotate(0)
+    shape1.shift(5, 5)
+    shape2.shift(3, 4)
+    shape1.rotate(180)
     shapedict: dict = {"shape1": shape1, "shape2": shape2}
     plane: Plane = Plane(10, 10)
     plane.draw(shapedict)
-    # print(shapedict["shape1"].is_touching(shapedict["shape2"]))
+    print(shapedict["shape1"].is_touching(shapedict["shape2"]))
     print(shape1)
     print("----------------")
     print(shape2)
