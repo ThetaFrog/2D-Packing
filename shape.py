@@ -2,7 +2,7 @@
 import numpy as np
 from shapely import shortest_line, LineString
 
-from plane import Plane
+# from plane import Plane
 from shapely.geometry import Polygon
 
 
@@ -11,7 +11,7 @@ class Shape:
     def __init__(self, trianglesforshape: np.array([], dtype=float)):
         """
         initialises shape class
-        :param trianglesforshape: 3D array containing the shapes constituent triangles,
+        :param trianglesforshape: 3D array containing the shape's constituent triangles,
         their constituent points (as pairs of coordinates)
         :return: Nothing
         """
@@ -32,20 +32,19 @@ class Shape:
 
         :return: ((bottom_x, bottom_y), (top_x, top_y))
         """
-        b_x: float = 0
-        b_y: float = 0
-        h_x: float = 0
-        h_y: float = 0
+        b_x, b_y = self.trianglesforshape[0][0]
+        h_x, h_y = self.trianglesforshape[0][0]
         for triangle in self.trianglesforshape:
-            for point in triangle:
-                if point[0] < b_x:
-                    b_x = point[0]
-                elif point[0] > h_x:
-                    h_x = point[0]
-                if point[1] < b_y:
-                    b_y = point[1]
-                elif point[1] > h_y:
-                    h_y = point[1]
+            for coord in triangle:
+                if coord[0] < b_x:
+                    b_x = coord[0]
+                elif coord[0] > h_x:
+                    h_x = coord[0]
+                if coord[1] < b_y:
+                    b_y = coord[1]
+                elif coord[1] > h_y:
+                    h_y = coord[1]
+
         return (b_x, b_y), (h_x, h_y)
 
     def get_size(self) -> tuple[float, float]:
@@ -57,16 +56,15 @@ class Shape:
         (b_x, b_y), (h_x, h_y) = self.get_bounds()
         return h_x - b_x, h_y - b_y
 
-    def _get_area(self) -> float:
+    def get_area(self) -> float:
         """
         Finds the area of the shape based on the area of individual triangles
         :return: area
         """
-        area = 0.0
+        area: float = 0.0
         for triangle in self.trianglesforshape:
-            xs = np.array([coord[0] for coord in triangle])
-            ys = np.array([coord[1] for coord in triangle])
-            area += 0.5 * (max(xs) - min(xs)) * (max(ys) - min(ys))
+            poly = Polygon(triangle)
+            area += poly.area
         return area
 
     def shift(self, dx, dy):
@@ -120,12 +118,12 @@ class Shape:
                                LineString([triangle2[2], triangle2[0]])])
                 for line in t1:
                     for line2 in t2:
-                        if -0.0001 <= shortest_line(line, line2).length <= 0.0001:
+                        if -0.0001 <= shortest_line(line, line2).length <= 0.01:
                             touching += 1
-                if touching != 0:
-                    continue
                 if poly1s.intersects(poly2s):
                     return -1
+                if touching != 0:
+                    continue
         return touching
 
 
@@ -134,21 +132,28 @@ if __name__ == "__main__":
                                      [1, 1],
                                      [1, 0]],
                                     [[1, 1],
-                                     [2, 2],
+                                     [2, 3],
                                      [1, 0]]], dtype=float))
     shape2: Shape = Shape(np.array([[[1, 0],
                                      [2, 1],
                                      [2, 0]],
                                     [[2, 1],
-                                     [3, 2],
+                                     [3, 3],
+                                     [2, 0]]], dtype=float))
+    shape3: Shape = Shape(np.array([[[1, 0],
+                                     [2, 1],
+                                     [2, 0]],
+                                    [[2, 1],
+                                     [3, 3],
                                      [2, 0]]], dtype=float))
     shape1.shift(5, 5)
     shape2.shift(3, 4)
+    shape3.shift(3, 4)
     shape1.rotate(180)
-    shapedict: dict = {"shape1": shape1, "shape2": shape2}
+    shapedict: dict = {"shape2": shape2, "shape3": shape3}
     plane: Plane = Plane(10, 10)
     plane.draw(shapedict)
-    print(shapedict["shape1"].is_touching(shapedict["shape2"]))
+    print(shapedict["shape2"].is_touching(shapedict["shape3"]))
     print(shape1)
     print("----------------")
     print(shape2)
